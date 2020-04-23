@@ -1,8 +1,9 @@
 package controllers
 
 import (
+	"encoding/json"
 	"log"
-	"net/http"
+	"time"
 
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
@@ -18,9 +19,34 @@ type EffectsController struct {
 // @Success 200 {object} models.ActionResult
 // @router / [post]
 func (c *EffectsController) Post() {
-	http.Get("http://192.168.0.66/cm?cmnd=Power%20Toggle")
-	c.Data["json"] = &models.ActionResults{Result: "requested"}
-	c.ServeJSON()
+	o := orm.NewOrm()
+
+	var effectRequest models.EffectRequest
+	json.Unmarshal(c.Ctx.Input.RequestBody, &effectRequest)
+	var devices []*models.Device
+	var timeoutsAt = time.Now().Unix() + int64(effectRequest.Duration)
+
+	o.QueryTable("device").All(&devices)
+	var allErr error = nil
+
+	for _, device := range devices {
+		var err = SendDeviceCommand(device, "Power%20On")
+		if err == nil {
+			device.TimeoutAt = timeoutsAt
+			o.Update(device)
+		} else {
+			beego.Error("Failed to enable device", device.Id, "at", device.ConnectorUri, "via", device.ConnectorType)
+			beego.Error("   |- ", err)
+			allErr = err
+		}
+	}
+
+	if allErr == nil {
+		c.Data["json"] = &models.ActionResults{Result: "requested"}
+		c.ServeJSON()
+	} else {
+		c.Abort("500")
+	}
 }
 
 // @Title Immediately Cancel All
@@ -28,9 +54,30 @@ func (c *EffectsController) Post() {
 // @Success 200 {object} models.ActionResult
 // @router / [delete]
 func (c *EffectsController) DeleteAll() {
-	http.Get("http://192.168.0.66/cm?cmnd=Power%20Off")
-	c.Data["json"] = &models.ActionResults{Result: "cancelled"}
-	c.ServeJSON()
+	o := orm.NewOrm()
+	var devices []*models.Device
+
+	o.QueryTable("device").All(&devices)
+	var allErr error = nil
+
+	for _, device := range devices {
+		var err = SendDeviceCommand(device, "Power%20Off")
+		if err == nil {
+			device.TimeoutAt = 0
+			o.Update(device)
+		} else {
+			beego.Error("Failed to disable device", device.Id, "at", device.ConnectorUri, "via", device.ConnectorType)
+			beego.Error("   |- ", err)
+			allErr = err
+		}
+	}
+
+	if allErr == nil {
+		c.Data["json"] = &models.ActionResults{Result: "cancelled all"}
+		c.ServeJSON()
+	} else {
+		c.Abort("500")
+	}
 }
 
 // @Title Immediately Cancel Specific
@@ -39,9 +86,7 @@ func (c *EffectsController) DeleteAll() {
 // @Success 200 {object} models.ActionResult
 // @router /:effectId [delete]
 func (c *EffectsController) Delete() {
-	http.Get("http://192.168.0.66/cm?cmnd=Power%20Toggle")
-	c.Data["json"] = &models.ActionResults{Result: "cancelled"}
-	c.ServeJSON()
+	c.Abort("501")
 }
 
 // @Title Get Effect Types
@@ -51,7 +96,7 @@ func (c *EffectsController) Delete() {
 func (c *EffectsController) GetTypes() {
 	o := orm.NewOrm()
 	var types orm.ParamsList
-	_, err := o.QueryTable("room_device").Distinct().ValuesFlat(&types, "effect_type")
+	_, err := o.QueryTable("device").Distinct().ValuesFlat(&types, "effect_type")
 
 	if err == nil {
 		c.Data["json"] = types

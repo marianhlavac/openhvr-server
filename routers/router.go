@@ -5,14 +5,14 @@
 package routers
 
 import (
-	"github.com/mmajko/openhvr-server/controllers"
 	"github.com/astaxie/beego"
+	"github.com/mmajko/openhvr-server/controllers"
 )
 
 func init() {
 	ns := beego.NewNamespace("/v1",
-		beego.NSNamespace("/room",
-			beego.NSInclude(&controllers.RoomController{}),
+		beego.NSNamespace("/devices",
+			beego.NSInclude(&controllers.DevicesController{}),
 		),
 		beego.NSNamespace("/effects",
 			beego.NSInclude(&controllers.EffectsController{}),

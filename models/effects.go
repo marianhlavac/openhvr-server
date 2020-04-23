@@ -1,84 +1,73 @@
 package models
 
-// import "fmt"
+import "time"
 
-// var DefaultTaskList *TaskManager
+var DefaultEffectManager *EffectManager
+
+type EffectTransform struct {
+	X         float32
+	Y         float32
+	Z         float32
+	Range     float32
+	Direction float32
+}
 
 type EffectRequest struct {
-	EffectType string
-	Duration   int
+	EffectType     string
+	Duration       int
+	Transform      EffectTransform
+	DirectionBased bool
 }
 
 type EffectPerformance struct {
-	Request EffectRequest
-	Id      int64
+	Id         int64
+	Request    *EffectRequest
+	TimeoutsAt int64
 }
 
-// type Task struct {
-// 	ID    int64  // Unique identifier
-// 	Title string // Description
-// 	Done  bool   // Is this task done?
-// }
+type EffectManager struct {
+	runningEffects []*EffectPerformance
+	lastID         int64
+}
 
-// // NewTask creates a new task given a title, that can't be empty.
-// func NewTask(title string) (*Task, error) {
-// 	if title == "" {
-// 		return nil, fmt.Errorf("empty title")
-// 	}
-// 	return &Task{0, title, false}, nil
-// }
+func NewEffectManager() *EffectManager {
+	return &EffectManager{}
+}
 
-// // TaskManager manages a list of tasks in memory.
-// type TaskManager struct {
-// 	tasks  []*Task
-// 	lastID int64
-// }
+func NewEffectTransform(x, y, z, effectRange, direction float32) *EffectTransform {
+	return &EffectTransform{x, y, z, effectRange, direction}
+}
 
-// // NewTaskManager returns an empty TaskManager.
-// func NewTaskManager() *TaskManager {
-// 	return &TaskManager{}
-// }
+func NewEffectRequest(effectType string, duration int, transform *EffectTransform, dirBased bool) *EffectRequest {
+	return &EffectRequest{effectType, duration, *transform, dirBased}
+}
 
-// // Save saves the given Task in the TaskManager.
-// func (m *TaskManager) Save(task *Task) error {
-// 	if task.ID == 0 {
-// 		m.lastID++
-// 		task.ID = m.lastID
-// 		m.tasks = append(m.tasks, cloneTask(task))
-// 		return nil
-// 	}
+func (m *EffectManager) RunEffect(effectRequest *EffectRequest) error {
+	m.lastID++
+	var timeoutsAt = time.Now().Unix() + int64(effectRequest.Duration)
 
-// 	for i, t := range m.tasks {
-// 		if t.ID == task.ID {
-// 			m.tasks[i] = cloneTask(task)
-// 			return nil
-// 		}
-// 	}
-// 	return fmt.Errorf("unknown task")
-// }
+	m.runningEffects = append(m.runningEffects, &EffectPerformance{
+		m.lastID, effectRequest, timeoutsAt,
+	})
 
-// // cloneTask creates and returns a deep copy of the given Task.
-// func cloneTask(t *Task) *Task {
-// 	c := *t
-// 	return &c
-// }
+	return nil
+}
 
-// // All returns the list of all the Tasks in the TaskManager.
-// func (m *TaskManager) All() []*Task {
-// 	return m.tasks
-// }
+func (m *EffectManager) All() []*EffectPerformance {
+	return m.runningEffects
+}
 
-// // Find returns the Task with the given id in the TaskManager and a boolean
-// // indicating if the id was found.
-// func (m *TaskManager) Find(ID int64) (*Task, bool) {
-// 	for _, t := range m.tasks {
-// 		if t.ID == ID {
-// 			return t, true
-// 		}
-// 	}
-// 	return nil, false
-// }
+func (m *EffectManager) AllTimeouted() []*EffectPerformance {
+	var now = time.Now().Unix()
+	var timeouted []*EffectPerformance
+	for _, effect := range m.runningEffects {
+		if effect.TimeoutsAt < now {
+			timeouted = append(timeouted, effect)
+		}
+	}
+	return timeouted
+}
 
-// func init() {
-// 	DefaultTaskList = NewTaskManager()
-// }
+func init() {
+	DefaultEffectManager = NewEffectManager()
+}
