@@ -4,18 +4,18 @@ import "time"
 
 var DefaultEffectManager *EffectManager
 
-type EffectTransform struct {
-	X         float32
-	Y         float32
-	Z         float32
-	Range     float32
-	Direction float32
+type Location struct {
+	X float32
+	Y float32
+	Z float32
 }
 
 type EffectRequest struct {
-	EffectType     string
+	EffectType     int
 	Duration       int
-	Transform      EffectTransform
+	Position       Location
+	Range          float32
+	Direction      float32
 	DirectionBased bool
 }
 
@@ -34,12 +34,12 @@ func NewEffectManager() *EffectManager {
 	return &EffectManager{}
 }
 
-func NewEffectTransform(x, y, z, effectRange, direction float32) *EffectTransform {
-	return &EffectTransform{x, y, z, effectRange, direction}
+func NewLocation(x, y, z float32) *Location {
+	return &Location{x, y, z}
 }
 
-func NewEffectRequest(effectType string, duration int, transform *EffectTransform, dirBased bool) *EffectRequest {
-	return &EffectRequest{effectType, duration, *transform, dirBased}
+func NewEffectRequest(effectType int, duration int, position *Location, effectRange, direction float32, dirBased bool) *EffectRequest {
+	return &EffectRequest{effectType, duration, *position, effectRange, direction, dirBased}
 }
 
 func (m *EffectManager) RunEffect(effectRequest *EffectRequest) error {

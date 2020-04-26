@@ -27,13 +27,35 @@ var timeoutedDevicesLastUpdate time.Time
 // @Description Return a list of devices registered to the room
 // @Success 200 {object} []models.Device
 // @router / [get]
-func (c *DevicesController) Get() {
+func (c *DevicesController) GetAll() {
 	o := orm.NewOrm()
 	var devices []models.Device
 	_, err := o.QueryTable("device").All(&devices)
 
 	if err == nil {
 		c.Data["json"] = devices
+		c.ServeJSON()
+	} else {
+		log.Fatal(err)
+		c.Abort("500")
+	}
+}
+
+// @Title Get Room Device
+// @Description Return a single device
+// @Param	deviceId		path 	string	true		"the objectid you want to get"
+// @Success 200 {object} []models.Device
+// @router /:deviceId [get]
+func (c *DevicesController) Get() {
+	var device models.Device
+	json.Unmarshal(c.Ctx.Input.RequestBody, &device)
+	device.Id, _ = strconv.Atoi(c.Ctx.Input.Param(":deviceId"))
+
+	o := orm.NewOrm()
+	err := o.Read(&device)
+
+	if err == nil {
+		c.Data["json"] = device
 		c.ServeJSON()
 	} else {
 		log.Fatal(err)

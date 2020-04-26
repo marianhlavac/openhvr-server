@@ -14,8 +14,23 @@ type EffectsController struct {
 	beego.Controller
 }
 
+// Returns all devices in range requested by the effect request
+func getDevicesInRequestRange(o orm.Ormer, req models.EffectRequest) []*models.Device {
+	var devices []*models.Device
+	o.QueryTable("device").
+		Filter("location_x__gte", req.Position.X-req.Range).
+		Filter("location_x__lte", req.Position.X+req.Range).
+		Filter("location_y__lte", req.Position.Y+req.Range).
+		Filter("location_y__gte", req.Position.Y-req.Range).
+		Filter("location_z__lte", req.Position.Z+req.Range).
+		Filter("location_z__gte", req.Position.Z-req.Range).
+		All(&devices)
+	return devices
+}
+
 // @Title Request Effect Performance
 // @Description Requests effect performance
+// @Param body body models.EffectRequest true
 // @Success 200 {object} models.ActionResult
 // @router / [post]
 func (c *EffectsController) Post() {
@@ -23,13 +38,11 @@ func (c *EffectsController) Post() {
 
 	var effectRequest models.EffectRequest
 	json.Unmarshal(c.Ctx.Input.RequestBody, &effectRequest)
-	var devices []*models.Device
 	var timeoutsAt = time.Now().Unix() + int64(effectRequest.Duration)
 
-	o.QueryTable("device").All(&devices)
 	var allErr error = nil
 
-	for _, device := range devices {
+	for _, device := range getDevicesInRequestRange(o, effectRequest) {
 		var err = SendDeviceCommand(device, "Power%20On")
 		if err == nil {
 			device.TimeoutAt = timeoutsAt

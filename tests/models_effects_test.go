@@ -16,8 +16,8 @@ func TestNewManager(t *testing.T) {
 
 func TestNewRequest(t *testing.T) {
 	var m = models.NewEffectManager()
-	var effectTransform = models.NewEffectTransform(0.5, 1.5, -2.0, 1.5, 1.44)
-	var request = models.NewEffectRequest("wind", 10, effectTransform, false)
+	var position = models.NewLocation(0.5, 1.5, -2.0)
+	var request = models.NewEffectRequest(0, 10, position, 1.5, 1.44, false)
 
 	if m.RunEffect(request) != nil {
 		t.Error("Error when running effect")
@@ -32,9 +32,9 @@ func TestNewRequest(t *testing.T) {
 
 func TestTimeouted(t *testing.T) {
 	var m = models.NewEffectManager()
-	var effectTransform = models.NewEffectTransform(0.5, 1.5, -2.0, 1.5, 1.44)
-	var requestFuture = models.NewEffectRequest("wind", 10, effectTransform, false)
-	var requestHistory = models.NewEffectRequest("wind", -10, effectTransform, false)
+	var position = models.NewLocation(0.5, 1.5, -2.0)
+	var requestFuture = models.NewEffectRequest(0, 10, position, 1.5, 1.44, false)
+	var requestHistory = models.NewEffectRequest(0, -10, position, 1.5, 1.44, false)
 
 	if m.RunEffect(requestFuture) != nil {
 		t.Error("Error when running effect")
@@ -47,7 +47,7 @@ func TestTimeouted(t *testing.T) {
 		t.Error("Manager didn't create all objects")
 	}
 	if len(m.AllTimeouted()) != 1 {
-		t.Error("Manager didn't create all objects")
+		t.Error("Timeouted objects are missing")
 	}
 	var timeoutedFirst = m.AllTimeouted()[0]
 	if timeoutedFirst.Request != requestHistory {
