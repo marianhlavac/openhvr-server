@@ -1,16 +1,26 @@
 <script>
     import Panel from './Panel.svelte'
+
+    status = 'loading'
 </script>
 
 <style>
-    div.system-status {
-        color: red;
+    .system-status {
+        font-size: 1.5em;
+        font-weight: 300;
+    }
+    .system-props {
+        font-size: 0.9em;
+        padding: 0.5em 0;
     }
 </style>
 
-<Panel>
+<Panel {status}>
     <div class="system-status">
-        System status unknown
+        system is <strong>{status}</strong>
+    </div>
+    <div class="system-props">
+        localhost:47023
     </div>
 </Panel>
 

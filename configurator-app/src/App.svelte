@@ -1,4 +1,5 @@
 <script>
+	import Header from './components/Header.svelte'
 	import DeviceList from './components/DeviceList.svelte'
 	import DeviceEdit from './components/DeviceEdit.svelte'
 	import SystemStatus from './components/SystemStatus.svelte'
@@ -18,7 +19,7 @@
 
 <style>
 	:global(body) {
-		background: #eee;
+		background: #f6f6f6;
 	}
 
 	main {
@@ -29,6 +30,7 @@
 
 
 <main>
+	<Header />
 	<SystemStatus />
 	{#if editOpened}
 		<DeviceEdit deviceId={editDeviceId} />
