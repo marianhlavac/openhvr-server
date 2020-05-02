@@ -70,6 +70,11 @@ func (c *DevicesController) Post() {
 	var device models.Device
 	json.Unmarshal(c.Ctx.Input.RequestBody, &device)
 
+	if device.DirectionX+device.DirectionY+device.DirectionZ == 0 {
+		c.CustomAbort(400, "Direction vector is invalid!")
+		return
+	}
+
 	o := orm.NewOrm()
 	_, err := o.Insert(&device)
 
