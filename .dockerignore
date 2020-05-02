@@ -28,3 +28,7 @@
 /openhvr-server
 /swagger
 data.db
+configurator-app/node_modules/
+configurator-app/public/build/
+
+.DS_Store
