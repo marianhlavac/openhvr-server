@@ -14,7 +14,7 @@ type EffectsController struct {
 }
 
 // Returns all devices in range requested by the effect request
-func getDevicesInRequestRange(o orm.Ormer, req models.EffectRequest) []*models.Device {
+func GetDevicesInRequestRange(o orm.Ormer, req models.EffectRequest) []*models.Device {
 	var devices []*models.Device
 	o.QueryTable("device").
 		Filter("location_x__gte", req.Position.X-req.Range).
