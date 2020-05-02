@@ -1,22 +1,27 @@
 package models
 
-import "time"
+import (
+	"time"
+
+	"github.com/astaxie/beego/orm"
+	"github.com/mmajko/openhvr-server/helpers"
+)
 
 var DefaultEffectManager *EffectManager
+var registeredEffectTypes []*EffectType
 
-type Location struct {
-	X float32
-	Y float32
-	Z float32
+type EffectType struct {
+	Id   int `orm:"auto"`
+	Name string
 }
 
 type EffectRequest struct {
-	EffectType     int
-	Duration       int
-	Position       Location
-	Range          float32
-	Direction      float32
-	DirectionBased bool
+	EffectType  *EffectType
+	Duration    int
+	Position    *helpers.Vector3
+	Direction   *helpers.Vector3
+	Range       float32
+	Directional bool
 }
 
 type EffectPerformance struct {
@@ -34,12 +39,16 @@ func NewEffectManager() *EffectManager {
 	return &EffectManager{}
 }
 
-func NewLocation(x, y, z float32) *Location {
-	return &Location{x, y, z}
+func NewEffectRequest(effectType *EffectType, duration int, position *helpers.Vector3,
+	effectRange float32) *EffectRequest {
+	return &EffectRequest{effectType, duration, position,
+		nil, effectRange, false}
 }
 
-func NewEffectRequest(effectType int, duration int, position *Location, effectRange, direction float32, dirBased bool) *EffectRequest {
-	return &EffectRequest{effectType, duration, *position, effectRange, direction, dirBased}
+func NewDirectionalRequest(effectType *EffectType, duration int,
+	position, direction *helpers.Vector3, effectRange float32) *EffectRequest {
+	return &EffectRequest{effectType, duration, position,
+		direction, effectRange, true}
 }
 
 func (m *EffectManager) RunEffect(effectRequest *EffectRequest) error {
@@ -66,6 +75,21 @@ func (m *EffectManager) AllTimeouted() []*EffectPerformance {
 		}
 	}
 	return timeouted
+}
+
+func (m *EffectManager) Clear() {
+	m.runningEffects = nil
+}
+
+func RegisterDefaultEffectType(id int, name string) {
+	registeredEffectTypes = append(registeredEffectTypes, &EffectType{Id: id, Name: name})
+}
+
+func ApplyDefaultEffectRegistration() {
+	o := orm.NewOrm()
+	for _, et := range registeredEffectTypes {
+		o.Insert(et)
+	}
 }
 
 func init() {
