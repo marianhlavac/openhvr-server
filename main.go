@@ -7,6 +7,7 @@ import (
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/context"
 	"github.com/astaxie/beego/orm"
+	"github.com/astaxie/beego/plugins/cors"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/mmajko/openhvr-server/controllers"
 	"github.com/mmajko/openhvr-server/devicedrivers"
@@ -82,9 +83,13 @@ func worker() {
 	}
 }
 
-func main() {
-	beego.BConfig.WebConfig.StaticDir["/docs"] = "swagger"
-	beego.BConfig.WebConfig.StaticDir["/"] = "static"
-	go worker()
-	beego.Run()
+// Options 200 OK workaround hack (cors plugin sucks!)
+func options200Fix() beego.FilterFunc {
+	return func(ctx *context.Context) {
+		if ctx.Input.Method() == "OPTIONS" {
+			ctx.ResponseWriter.WriteHeader(204)
+			ctx.WriteString("")
+			return
+		}
+	}
 }
