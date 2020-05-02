@@ -13,6 +13,6 @@ type SystemController struct {
 // @Success 200 {string}
 // @router /status [get]
 func (c *SystemController) GetStatus() {
-	c.Data["json"] = map[string]string { "result": "done" }
+	c.Data["json"] = map[string]string{"result": "done"}
 	c.ServeJSON()
 }

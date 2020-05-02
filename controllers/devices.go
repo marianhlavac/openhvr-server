@@ -3,14 +3,13 @@ package controllers
 import (
 	"encoding/json"
 	"log"
-	"net/http"
 	"strconv"
 	"time"
 
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
+	"github.com/mmajko/openhvr-server/devicedrivers"
 	"github.com/mmajko/openhvr-server/models"
-	"github.com/pkg/errors"
 )
 
 type DevicesController struct {
@@ -19,7 +18,6 @@ type DevicesController struct {
 
 const timeoutedDevicesUpdateInterval = 2 * time.Second
 
-var CommunicationNonOk = errors.New("CommunicationNonOk")
 var timeoutedDevicesCache []models.Device = nil
 var timeoutedDevicesLastUpdate time.Time
 
@@ -135,14 +133,44 @@ func (c *DevicesController) Delete() {
 	}
 }
 
-func SendDeviceCommand(device *models.Device, command string) error {
-	resp, err := http.Get("http://" + device.ConnectorUri + "/cm?cmnd=" + command)
+// @Title Get Available Drivers
+// @Description Return a list of names of currently supported drivers by the server
+// @Success 200 {object} []string
+// @router /drivers [get]
+func (c *DevicesController) GetDrivers() {
+	drivers := devicedrivers.GetAvailableDrivers()
+
+	c.Data["json"] = drivers
+	c.ServeJSON()
+}
+
+// RequestOnDevice processes an effect request on a selected device. It
+// updates the timeouts and calls for correct driver to further handle
+// the request.
+func RequestOnDevice(device *models.Device, effectRequest *models.EffectRequest) error {
+	o := orm.NewOrm()
+	var timeoutsAt = time.Now().Unix() + int64(effectRequest.Duration)
+	var err = devicedrivers.HandleRequestWithDriver(device, effectRequest)
 	if err == nil {
-		if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
-			return nil
-		} else {
-			return CommunicationNonOk
-		}
+		device.TimeoutAt = timeoutsAt
+		o.Update(device)
+	} else if err != devicedrivers.DeviceWrongDirection {
+		beego.Error("Failed to request effect on device ", device.Id, "at", device.ConnectorUri)
+		beego.Error("   |- ", err)
+	}
+	return err
+}
+
+// CancelOnDevice cancels all currently produced effects on a selected device.
+func CancelOnDevice(device *models.Device) error {
+	o := orm.NewOrm()
+	var err = devicedrivers.HandleRequestWithDriver(device, nil)
+	if err == nil {
+		device.TimeoutAt = 0
+		o.Update(device)
+	} else if err != devicedrivers.DeviceWrongDirection {
+		beego.Error("Failed to cancel effect on device ", device.Id, "at", device.ConnectorUri)
+		beego.Error("   |- ", err)
 	}
 	return err
 }
@@ -171,14 +199,9 @@ func DisableAllTimeoutedDevices() int {
 	}
 
 	for _, device := range timeoutedDevicesCache {
-		_, err := http.Get("http://" + device.ConnectorUri + "/cm?cmnd=Power%20Off")
+		err := CancelOnDevice(&device)
 		if err == nil {
-			device.TimeoutAt = 0
 			timeoutedDevicesCache = removeTimeoutedDevice(timeoutedDevicesCache, device.Id)
-			o.Update(&device)
-		} else {
-			beego.Error("Failed to disable device", device.Id, "at", device.ConnectorUri, "via", device.ConnectorType)
-			beego.Error("   |- ", err)
 		}
 	}
 

@@ -3,7 +3,6 @@ package controllers
 import (
 	"encoding/json"
 	"log"
-	"time"
 
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
@@ -38,28 +37,13 @@ func (c *EffectsController) Post() {
 
 	var effectRequest models.EffectRequest
 	json.Unmarshal(c.Ctx.Input.RequestBody, &effectRequest)
-	var timeoutsAt = time.Now().Unix() + int64(effectRequest.Duration)
 
-	var allErr error = nil
-
-	for _, device := range getDevicesInRequestRange(o, effectRequest) {
-		var err = SendDeviceCommand(device, "Power%20On")
-		if err == nil {
-			device.TimeoutAt = timeoutsAt
-			o.Update(device)
-		} else {
-			beego.Error("Failed to enable device", device.Id, "at", device.ConnectorUri, "via", device.ConnectorType)
-			beego.Error("   |- ", err)
-			allErr = err
-		}
+	for _, device := range GetDevicesInRequestRange(o, effectRequest) {
+		go RequestOnDevice(device, &effectRequest)
 	}
 
-	if allErr == nil {
-		c.Data["json"] = &models.ActionResults{Result: "requested"}
-		c.ServeJSON()
-	} else {
-		c.Abort("500")
-	}
+	c.Data["json"] = &models.ActionResults{Result: "requested"}
+	c.ServeJSON()
 }
 
 // @Title Immediately Cancel All
@@ -71,26 +55,13 @@ func (c *EffectsController) DeleteAll() {
 	var devices []*models.Device
 
 	o.QueryTable("device").All(&devices)
-	var allErr error = nil
 
 	for _, device := range devices {
-		var err = SendDeviceCommand(device, "Power%20Off")
-		if err == nil {
-			device.TimeoutAt = 0
-			o.Update(device)
-		} else {
-			beego.Error("Failed to disable device", device.Id, "at", device.ConnectorUri, "via", device.ConnectorType)
-			beego.Error("   |- ", err)
-			allErr = err
-		}
+		go CancelOnDevice(device)
 	}
 
-	if allErr == nil {
-		c.Data["json"] = &models.ActionResults{Result: "cancelled all"}
-		c.ServeJSON()
-	} else {
-		c.Abort("500")
-	}
+	c.Data["json"] = &models.ActionResults{Result: "cancelled all"}
+	c.ServeJSON()
 }
 
 // @Title Immediately Cancel Specific
@@ -104,12 +75,12 @@ func (c *EffectsController) Delete() {
 
 // @Title Get Effect Types
 // @Description Return the list of available effect types
-// @Success 200 {string}
+// @Success 200 {object} []models.EffectType
 // @router /types [get]
 func (c *EffectsController) GetTypes() {
 	o := orm.NewOrm()
-	var types orm.ParamsList
-	_, err := o.QueryTable("device").Distinct().ValuesFlat(&types, "effect_type")
+	var types []models.EffectType
+	_, err := o.QueryTable("effect_type").All(&types)
 
 	if err == nil {
 		c.Data["json"] = types
