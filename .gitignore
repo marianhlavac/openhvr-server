@@ -27,4 +27,4 @@
 *.tmp
 /openhvr-server
 /swagger
-data.db
+/_data

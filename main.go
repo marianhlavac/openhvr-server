@@ -60,7 +60,7 @@ func main() {
 func prepareDatabase() {
 	// Register database
 	orm.RegisterDriver("sqlite3", orm.DRSqlite)
-	orm.RegisterDataBase("default", "sqlite3", "data.db")
+	orm.RegisterDataBase("default", "sqlite3", "_data/data.db")
 
 	// Migrate schema
 	if err := orm.RunSyncdb("default", false, false); err != nil {
