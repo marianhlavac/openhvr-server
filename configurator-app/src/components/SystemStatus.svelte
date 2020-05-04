@@ -1,7 +1,20 @@
 <script>
     import Panel from './Panel.svelte'
+    import { fetchStatus } from '../api.js'
 
-    status = 'loading'
+    var status = 'loading'
+    var panelVariant = 'loading'
+
+    $: {
+        fetchStatus().then(systemStatus => {
+            var systemWorking = systemStatus.result == 'done'
+            status = systemWorking ? 'responsive' : 'unreachable'
+            panelVariant = systemWorking ? 'positive' : 'error'
+        }).catch(err => {
+            status = 'unreachable'
+            panelVariant = 'error'
+        })
+    }
 </script>
 
 <style>
@@ -15,7 +28,7 @@
     }
 </style>
 
-<Panel {status}>
+<Panel variant={panelVariant}>
     <div class="system-status">
         system is <strong>{status}</strong>
     </div>

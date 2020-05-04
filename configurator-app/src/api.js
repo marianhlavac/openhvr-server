@@ -34,3 +34,8 @@ export async function fetchTypes() {
     const res = await fetch(`${API_ENDPOINT}/effects/types`)
     return await res.json()
 }
+
+export async function fetchStatus() {
+    const res = await fetch(`${API_ENDPOINT}/system/status`)
+    return await res.json()
+}

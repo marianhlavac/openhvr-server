@@ -1,5 +1,5 @@
 <script>
-    export var status = 'none'
+    export var variant = 'none'
 </script>
 
 <style>
@@ -23,8 +23,17 @@
         background-size: 200%;
         animation: 1s linear infinite loading-stripe;
     }
+
+    .panel.positive {
+        background: #effcf7;
+    }
+
+    .panel.error {
+        background: #cf5015;
+        color: white;
+    }
 </style>
 
-<div class="panel {status}">
+<div class="panel {variant}">
     <slot />
 </div>
