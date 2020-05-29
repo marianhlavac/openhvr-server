@@ -23,3 +23,5 @@ func (v *Vector3) Dot(v2 *Vector3) float64 {
 func (v *Vector3) Magnitude() float64 {
 	return math.Sqrt(math.Pow(float64(v.X), 2) + math.Pow(float64(v.Y), 2) + math.Pow(float64(v.Z), 2))
 }
+
+var ZeroVector3 = NewVector3(0, 0, 0)

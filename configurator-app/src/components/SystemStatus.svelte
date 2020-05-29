@@ -30,7 +30,7 @@
 
 <Panel variant={panelVariant}>
     <div class="system-status">
-        system is <strong>{status}</strong>
+        System is <strong>{status}</strong>.
     </div>
     <div class="system-props">
         localhost:47023

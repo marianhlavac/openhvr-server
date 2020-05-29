@@ -1,6 +1,7 @@
 package models
 
 import (
+	"math"
 	"time"
 
 	"github.com/astaxie/beego/orm"
@@ -14,6 +15,8 @@ type EffectType struct {
 	Id   int `orm:"auto"`
 	Name string
 }
+
+var AnyEffectType = &EffectType{Id: -1, Name: "Any"}
 
 type EffectRequest struct {
 	EffectType  *EffectType
@@ -49,6 +52,11 @@ func NewDirectionalRequest(effectType *EffectType, duration int,
 	position, direction *helpers.Vector3, effectRange float32) *EffectRequest {
 	return &EffectRequest{effectType, duration, position,
 		direction, effectRange, true}
+}
+
+func NewUnconstrainedRequest(duration int) *EffectRequest {
+	return &EffectRequest{AnyEffectType, duration, helpers.ZeroVector3,
+		helpers.ZeroVector3, math.MaxFloat32, false}
 }
 
 func (m *EffectManager) RunEffect(effectRequest *EffectRequest) error {

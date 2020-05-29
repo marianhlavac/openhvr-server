@@ -1,5 +1,7 @@
 <script>
-    export var click = () => {}
+    export let click = () => {}
+    export let appearance = ""
+    export let type = "button"
 </script>
 
 <style>
@@ -19,6 +21,10 @@
         cursor: pointer;
         transform: scale(1.05);
     }
+
+    button.light {
+        background: #aaa;
+    }
 </style>
 
-<button on:click={click}><slot /></button>
+<button on:click={click} class={appearance} {type}><slot /></button>

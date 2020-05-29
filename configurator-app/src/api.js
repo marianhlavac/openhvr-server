@@ -26,16 +26,24 @@ export async function deleteDevice(id) {
 }
 
 export async function fetchDrivers() {
-    const res = await fetch(`${API_ENDPOINT}/devices/drivers`)
+    const url = `${API_ENDPOINT}/devices/drivers`
+    const res = await fetch(url)
     return await res.json()
 }
 
 export async function fetchTypes() {
-    const res = await fetch(`${API_ENDPOINT}/effects/types`)
+    const url = `${API_ENDPOINT}/effects/types`
+    const res = await fetch(url)
     return await res.json()
 }
 
 export async function fetchStatus() {
-    const res = await fetch(`${API_ENDPOINT}/system/status`)
+    const url = `${API_ENDPOINT}/system/status`
+    const res = await fetch(url)
     return await res.json()
+}
+
+export async function testDevice(id) {
+    const url = `${API_ENDPOINT}/devices/${id}/test`
+    await fetch(url, { method: 'post' })
 }

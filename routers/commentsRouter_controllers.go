@@ -54,6 +54,15 @@ func init() {
 
     beego.GlobalControllerRouter["github.com/mmajko/openhvr-server/controllers:DevicesController"] = append(beego.GlobalControllerRouter["github.com/mmajko/openhvr-server/controllers:DevicesController"],
         beego.ControllerComments{
+            Method: "PostTest",
+            Router: `/:deviceId/test`,
+            AllowHTTPMethods: []string{"post"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
+    beego.GlobalControllerRouter["github.com/mmajko/openhvr-server/controllers:DevicesController"] = append(beego.GlobalControllerRouter["github.com/mmajko/openhvr-server/controllers:DevicesController"],
+        beego.ControllerComments{
             Method: "GetDrivers",
             Router: `/drivers`,
             AllowHTTPMethods: []string{"get"},

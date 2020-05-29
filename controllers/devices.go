@@ -17,6 +17,7 @@ type DevicesController struct {
 }
 
 const timeoutedDevicesUpdateInterval = 2 * time.Second
+const testEffectDuration = 2
 
 var timeoutedDevicesCache []models.Device = nil
 var timeoutedDevicesLastUpdate time.Time
@@ -46,7 +47,6 @@ func (c *DevicesController) GetAll() {
 // @router /:deviceId [get]
 func (c *DevicesController) Get() {
 	var device models.Device
-	json.Unmarshal(c.Ctx.Input.RequestBody, &device)
 	device.Id, _ = strconv.Atoi(c.Ctx.Input.Param(":deviceId"))
 
 	o := orm.NewOrm()
@@ -70,7 +70,7 @@ func (c *DevicesController) Post() {
 	var device models.Device
 	json.Unmarshal(c.Ctx.Input.RequestBody, &device)
 
-	if device.DirectionX+device.DirectionY+device.DirectionZ == 0 {
+	if isDirectionInvalid(device.DirectionX, device.DirectionY, device.DirectionZ) {
 		c.CustomAbort(400, "Direction vector is invalid!")
 		return
 	}
@@ -97,6 +97,11 @@ func (c *DevicesController) Put() {
 	var device models.Device
 	json.Unmarshal(c.Ctx.Input.RequestBody, &device)
 	device.Id, _ = strconv.Atoi(c.Ctx.Input.Param(":deviceId"))
+
+	if isDirectionInvalid(device.DirectionX, device.DirectionY, device.DirectionZ) {
+		c.CustomAbort(400, "Direction vector is invalid!")
+		return
+	}
 
 	o := orm.NewOrm()
 	num, err := o.Update(&device)
@@ -134,6 +139,27 @@ func (c *DevicesController) Delete() {
 		c.ServeJSON()
 	} else {
 		log.Fatal(err)
+		c.Abort("500")
+	}
+}
+
+// @Title Test Room Device
+// @Description Test a room device
+// @Param	deviceId		path 	string	true		"the objectid you want to get"
+// @Success 200 {string}
+// @router /:deviceId/test [post]
+func (c *DevicesController) PostTest() {
+	var device models.Device
+	device.Id, _ = strconv.Atoi(c.Ctx.Input.Param(":deviceId"))
+
+	o := orm.NewOrm()
+	err := o.Read(&device)
+	if err == nil {
+		go RequestOnDevice(&device, models.NewUnconstrainedRequest(testEffectDuration))
+
+		c.Data["json"] = &models.ActionResults{Result: "test sent"}
+		c.ServeJSON()
+	} else {
 		c.Abort("500")
 	}
 }
@@ -211,4 +237,8 @@ func DisableAllTimeoutedDevices() int {
 	}
 
 	return len(timeoutedDevicesCache)
+}
+
+func isDirectionInvalid(x, y, z float32) bool {
+	return x == 0 && y == 0 && z == 0
 }

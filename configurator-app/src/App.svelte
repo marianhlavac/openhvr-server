@@ -1,19 +1,13 @@
 <script>
 	import Header from './components/Header.svelte'
 	import DeviceList from './components/DeviceList.svelte'
-	import DeviceEdit from './components/DeviceEdit.svelte'
 	import SystemStatus from './components/SystemStatus.svelte'
+	import NewDevice from './components/NewDevice.svelte'
 
-	var editDeviceId = null
-	var editOpened = false
+	var creatingNewDevice = false
 
-	function handleDeviceClick(ev) {
-		if (ev.detail) {
-			editOpened = true
-			editDeviceId = ev.detail.id || null
-		} else {
-			editOpened = false
-		}
+	function handleNewDeviceMode(ev) {
+		creatingNewDevice = ev.detail
 	}
 </script>
 
@@ -23,7 +17,7 @@
 	}
 
 	main {
-		max-width: 720px;
+		max-width: 960px;
 		margin: 4rem auto;
 	}
 </style>
@@ -31,9 +25,10 @@
 
 <main>
 	<Header />
+	{#if creatingNewDevice}
+	<NewDevice on:newClicked={handleNewDeviceMode} />
+	{:else}
 	<SystemStatus />
-	{#if editOpened}
-		<DeviceEdit deviceId={editDeviceId} />
+	<DeviceList on:newClicked={handleNewDeviceMode} />
 	{/if}
-	<DeviceList on:deviceClicked={handleDeviceClick} />
 </main>
