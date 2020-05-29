@@ -7,8 +7,9 @@ import (
 	"github.com/mmajko/openhvr-server/models"
 )
 
-// TODO TESTS
-func isRotatedWithinSpread(device *models.Device, requestDirection helpers.Vector3) bool {
+// IsRotatedWithinSpread checks if requested direction is aligned with the
+// configured direction of the device.
+func IsRotatedWithinSpread(device *models.Device, requestDirection helpers.Vector3) bool {
 	deviceRot := device.GetDirectionVector()
 	dot := requestDirection.Dot(deviceRot)
 	angle := math.Acos(dot / requestDirection.Magnitude() * deviceRot.Magnitude())
@@ -20,8 +21,12 @@ func TasmotaFanDriver(device *models.Device, request *models.EffectRequest) erro
 	relayName := ReadRelayNameFromParamDefault(device.ConnectorParam)
 	if request != nil {
 		// Filter out device if it's out of the direction spread range
-		if request.Directional && !isRotatedWithinSpread(device, *request.Direction) {
-			return DeviceWrongDirection
+		if request.Directional && !IsRotatedWithinSpread(device, *request.Direction) {
+			return DeviceFilteredOut
+		}
+		// Match the effect type
+		if !MatchEffectType(device, request) {
+			return DeviceFilteredOut
 		}
 		return TasmotaHTTPSendCommand(device.ConnectorUri, relayName+"%201")
 	}

@@ -10,7 +10,7 @@ type deviceEffectRequest = func(*models.Device, *models.EffectRequest) error
 
 var registeredDrivers = map[string]deviceEffectRequest{}
 var DriverNotExistError = errors.New("Device driver does not exist.")
-var DeviceWrongDirection = errors.New("Device is just in wrong direction")
+var DeviceFilteredOut = errors.New("Device is not eligible to play the effect.")
 var CommunicationNonOk = errors.New("CommunicationNonOk")
 
 // RegisterDriver registers a new driver under specified name
@@ -37,4 +37,9 @@ func GetAvailableDrivers() []string {
 		driversNames = append(driversNames, k)
 	}
 	return driversNames
+}
+
+// MatchEffectType determines if the device is of the same type as request is asking
+func MatchEffectType(device *models.Device, request *models.EffectRequest) bool {
+	return device.EffectType == request.EffectType.Id
 }

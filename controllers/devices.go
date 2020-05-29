@@ -22,8 +22,8 @@ const testEffectDuration = 2
 var timeoutedDevicesCache []models.Device = nil
 var timeoutedDevicesLastUpdate time.Time
 
-// @Title Get Room Devices
-// @Description Return a list of devices registered to the room
+// @Title Get Effect Devices
+// @Description Return a list of effect devices registered to the room
 // @Success 200 {object} []models.Device
 // @router / [get]
 func (c *DevicesController) GetAll() {
@@ -40,9 +40,9 @@ func (c *DevicesController) GetAll() {
 	}
 }
 
-// @Title Get Room Device
-// @Description Return a single device
-// @Param	deviceId		path 	string	true		"the objectid you want to get"
+// @Title Get Effect Device
+// @Description Return a single effect device
+// @Param	deviceId		path 	string	true	"Effect Device's ID"
 // @Success 200 {object} []models.Device
 // @router /:deviceId [get]
 func (c *DevicesController) Get() {
@@ -61,8 +61,8 @@ func (c *DevicesController) Get() {
 	}
 }
 
-// @Title Register Room Device
-// @Description Register a new room device
+// @Title Register Effect Device
+// @Description Register a new effect device
 // @Success 200 {object} models.Device
 // @Param body body models.Device true
 // @router / [post]
@@ -87,9 +87,9 @@ func (c *DevicesController) Post() {
 	}
 }
 
-// @Title Update Room Device
-// @Description Update a room device
-// @Param	deviceId		path 	string	true		"the objectid you want to get"
+// @Title Update Effect Device
+// @Description Update an effect device
+// @Param	deviceId		path 	string	true		"Effect Device's ID"
 // @Success 200 {object} models.Device
 // @Param body body models.Device true
 // @router /:deviceId [put]
@@ -119,9 +119,9 @@ func (c *DevicesController) Put() {
 	}
 }
 
-// @Title Delete Room Device
-// @Description Delete a room device
-// @Param	deviceId		path 	string	true		"the objectid you want to get"
+// @Title Delete Effect Device
+// @Description Delete an effect device
+// @Param	deviceId		path 	string	true		"Effect Device's ID"
 // @Success 200 {object} models.ActionResult
 // @router /:deviceId [delete]
 func (c *DevicesController) Delete() {
@@ -143,9 +143,9 @@ func (c *DevicesController) Delete() {
 	}
 }
 
-// @Title Test Room Device
-// @Description Test a room device
-// @Param	deviceId		path 	string	true		"the objectid you want to get"
+// @Title Test Effect Device
+// @Description Test an effect device, turns it on and then quickly off
+// @Param	deviceId		path 	string	true		"Effect Device's ID"
 // @Success 200 {string}
 // @router /:deviceId/test [post]
 func (c *DevicesController) PostTest() {
@@ -185,7 +185,7 @@ func RequestOnDevice(device *models.Device, effectRequest *models.EffectRequest)
 	if err == nil {
 		device.TimeoutAt = timeoutsAt
 		o.Update(device)
-	} else if err != devicedrivers.DeviceWrongDirection {
+	} else if err != devicedrivers.DeviceFilteredOut {
 		beego.Error("Failed to request effect on device ", device.Id, "at", device.ConnectorUri)
 		beego.Error("   |- ", err)
 	}
@@ -199,13 +199,15 @@ func CancelOnDevice(device *models.Device) error {
 	if err == nil {
 		device.TimeoutAt = 0
 		o.Update(device)
-	} else if err != devicedrivers.DeviceWrongDirection {
+	} else if err != devicedrivers.DeviceFilteredOut {
 		beego.Error("Failed to cancel effect on device ", device.Id, "at", device.ConnectorUri)
 		beego.Error("   |- ", err)
 	}
 	return err
 }
 
+// UpdateTimeoutedDevicesCache is used for periodical cache update of timeouted
+// devices.
 func UpdateTimeoutedDevicesCache(o orm.Ormer) {
 	now := time.Now()
 	o.QueryTable("device").Filter("timeout_at__lte", now.Unix()).Filter("timeout_at__gt", 0).All(&timeoutedDevicesCache)
@@ -223,6 +225,11 @@ func removeTimeoutedDevice(s []models.Device, id int) []models.Device {
 	return s[:n]
 }
 
+func isDirectionInvalid(x, y, z float32) bool {
+	return x == 0 && y == 0 && z == 0
+}
+
+// DisableAllTimeoutedDevices sends an off signal to all timeouted devices
 func DisableAllTimeoutedDevices() int {
 	o := orm.NewOrm()
 	if timeoutedDevicesCache == nil || timeoutedDevicesLastUpdate.Add(timeoutedDevicesUpdateInterval).Before(time.Now()) {
@@ -237,8 +244,4 @@ func DisableAllTimeoutedDevices() int {
 	}
 
 	return len(timeoutedDevicesCache)
-}
-
-func isDirectionInvalid(x, y, z float32) bool {
-	return x == 0 && y == 0 && z == 0
 }
