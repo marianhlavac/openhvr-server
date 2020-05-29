@@ -7,7 +7,7 @@
 
     const dispatch = createEventDispatcher()
     var handleNew = () => dispatch('newClicked', true)
-    let devices = []
+    let devices = null
 
     $: (async () => {
         devices = await fetchDeviceList()
@@ -43,6 +43,17 @@
         top: 1.5rem;
         right: 1.5rem;
     }
+
+    .no-devices {
+        text-align: center;
+        margin: 6em 0 3em 0;
+    }
+
+    .no-devices p {
+        color: #999;
+        font-size: 1.7em;
+        font-weight: 500;
+    }
 </style>
 
 <Panel>
@@ -51,11 +62,18 @@
         <Button click={handleNew}>Add Device</Button>
     </div>
     <ul class="device-list">
-        {#each devices as device}
-            <DeviceItem {device} />
+        {#if devices == null}
+            Loading device list...
         {:else}
-        Loading device list...
-        {/each}
+            {#each devices as device}
+                <DeviceItem {device} />
+            {:else}
+                <div class="no-devices">
+                    <p>No devices configured.</p>
+                    <Button click={handleNew}>Add Device</Button>
+                </div>
+            {/each}
+        {/if}
     </ul>
 </Panel>
 

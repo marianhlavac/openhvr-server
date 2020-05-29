@@ -6,7 +6,12 @@
     import { updateDevice, fetchDrivers, fetchTypes } from '../api.js'
 
     const dispatch = createEventDispatcher()
-    let device = {}
+    let device = { 
+        EffectType: 1,
+        LocationX: 0, LocationY: 0, LocationZ: 0,
+        DirectionX: 1, DirectionY: 0, DirectionZ: 0,
+        DirectionSpread: 45,
+    }
     let drivers = []
     let types = []
 
@@ -113,6 +118,29 @@
         background: #fcfcfc;
         font-weight: 600;
     }
+
+    @media (max-width: 760px) {
+        .type-choices {
+            display: block;
+        }
+
+        .type-choice label {
+            margin: 0;
+            margin-bottom: 0.1em;
+            width: auto;
+            height: 2rem;
+            line-height: 2rem;
+            text-align: left;
+        }
+
+        .type-choice label img {
+            float: left;
+            margin: 0em;
+            margin-right: 2rem;
+            height: 2rem;
+            width: 2rem;
+        }
+    }
 </style>
 
 <Panel>
@@ -121,7 +149,7 @@
         <dl>
             <span class="prop-row">
                 <dt><label for="name">Device Name</label></dt>
-                <dd><input id="name" bind:value={device.Name} /></dd>
+                <dd><input id="name" bind:value={device.Name} required /></dd>
             </span>
             <span class="prop-row">
                 <dt><label for="etype">Effect Type</label></dt>
@@ -138,9 +166,9 @@
                 </dd>
             </span>
             <span class="prop-col">
-                <dt><label for="dtype">Device Type</label></dt>
+                <dt><label for="dtype">Device Type (Driver)</label></dt>
                 <dd>
-                    <select id="dtype" bind:value={device.Type}>
+                    <select id="dtype" bind:value={device.Type} required>
                     {#each drivers as driver}
                     <option value="{driver}">{driver}</option>
                     {/each}
@@ -148,9 +176,9 @@
                 </dd>
             </span>
             <span class="prop-col">
-                <dt><label for="curi">Connection URI</label></dt>
+                <dt><label for="curi">Connection URI (IP Address)</label></dt>
                 <dd>
-                    <input id="curi" type="text" bind:value={device.ConnectorUri} />
+                    <input id="curi" type="text" bind:value={device.ConnectorUri} required />
                 </dd>
             </span>
             <span class="prop-col">
@@ -162,17 +190,17 @@
             <span class="prop-col">
                 <dt><label for="px">Location Vector</label></dt>
                 <dd class="short-inputs">
-                    <input id="px" type="number" step="any" bind:value={device.LocationX} />
-                    <input id="py" type="number" step="any" bind:value={device.LocationY} />
-                    <input id="pz" type="number" step="any" bind:value={device.LocationZ} />
+                    <input id="px" type="number" step="any" bind:value={device.LocationX} required />
+                    <input id="py" type="number" step="any" bind:value={device.LocationY} required />
+                    <input id="pz" type="number" step="any" bind:value={device.LocationZ} required />
                 </dd>
             </span>
             <span class="prop-col">
                 <dt><label for="dx">Direction Vector and Spread</label></dt>
                 <dd class="short-inputs">
-                    <input id="dx" type="number" step="any" bind:value={device.DirectionX} />
-                    <input id="dy" type="number" step="any" bind:value={device.DirectionY} />
-                    <input id="dz" type="number" step="any" bind:value={device.DirectionZ} />
+                    <input id="dx" type="number" step="any" bind:value={device.DirectionX} required />
+                    <input id="dy" type="number" step="any" bind:value={device.DirectionY} required />
+                    <input id="dz" type="number" step="any" bind:value={device.DirectionZ} required />
                     <input id="ds" type="number" step="any" bind:value={device.DirectionSpread} />
                     &deg;
                 </dd>

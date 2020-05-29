@@ -22,8 +22,18 @@
         transform: scale(1.05);
     }
 
+    button:focus {
+        background: #376d59;
+        box-shadow: 0em 0em 2em #7CD5B4;
+    }
+
     button.light {
-        background: #aaa;
+        background: #9b9b9b;
+    }
+
+    button.light:focus {
+        background: #424242;
+        box-shadow: 0em 0em 2em rgb(199, 199, 199);
     }
 </style>
 

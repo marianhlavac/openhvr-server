@@ -10,6 +10,6 @@
 </style>
 
 <div class="header">
-    <img src="logo.png" alt="OpenHVR logo" />
+    <a href="/"><img src="logo.png" alt="OpenHVR logo" /></a>
 </div>
 
