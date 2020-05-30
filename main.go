@@ -50,6 +50,7 @@ func main() {
 
 	// Apply middlewares
 	beego.InsertFilter("*", beego.BeforeRouter, middleware.Options200Fix())
+	beego.InsertFilter("*", beego.BeforeRouter, middleware.AllowWhitelistedOnly())
 
 	beego.BConfig.WebConfig.StaticDir["/docs"] = "swagger"
 	beego.BConfig.WebConfig.StaticDir["/"] = "configurator-app/public"
