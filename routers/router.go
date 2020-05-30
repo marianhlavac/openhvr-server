@@ -1,6 +1,6 @@
 // @APIVersion 1.0.0
 // @Title OpenHVR Server
-// @Description OpenHVR Server is a TBD
+// @Description OpenHVR Server is one of the OpenHVR components to provide real-world haptic feedback effects for VR applications
 // @Contact m@marianhlavac.cz
 package routers
 
